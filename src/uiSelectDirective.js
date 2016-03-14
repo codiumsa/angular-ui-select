@@ -65,7 +65,9 @@ uis.directive('uiSelect',
           });
         }
 
-        if (angular.isDefined(attrs.multiple) && angular.isDefined(attrs.required)) {
+        if (angular.isDefined(attrs.multiple)) {
+
+          if(angular.isDefined(attrs.required) || (angular.isDefined(attrs.ngRequired) && attrs.ngRequired === "true")) {
 
           // Custom validator to make required work with mulitple
           // this pattern modeled after the way angular directly
@@ -94,6 +96,7 @@ uis.directive('uiSelect',
             ngModel.$validate();
           });
         }
+      }
 
 
         scope.$watch('searchEnabled', function() {

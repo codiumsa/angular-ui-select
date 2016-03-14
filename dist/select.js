@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.13.2 - 2016-01-28T14:34:36.767Z
+ * Version: 0.13.2 - 2016-03-14T13:47:02.779Z
  * License: MIT
  */
 
@@ -853,7 +853,9 @@ uis.directive('uiSelect',
           });
         }
 
-        if (angular.isDefined(attrs.multiple) && angular.isDefined(attrs.required)) {
+        if (angular.isDefined(attrs.multiple)) {
+
+          if(angular.isDefined(attrs.required) || (angular.isDefined(attrs.ngRequired) && attrs.ngRequired === "true")) {
 
           // Custom validator to make required work with mulitple
           // this pattern modeled after the way angular directly
@@ -882,6 +884,7 @@ uis.directive('uiSelect',
             ngModel.$validate();
           });
         }
+      }
 
 
         scope.$watch('searchEnabled', function() {
