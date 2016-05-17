@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.17.0 - 2016-05-12T14:22:01.650Z
+ * Version: 0.17.0 - 2016-05-12T15:11:17.179Z
  * License: MIT
  */
 
@@ -1846,6 +1846,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
 
       $select.searchInput.on('blur', function() {
         $timeout(function() {
+          $select.searchInput[0].value = "";
           $selectMultiple.activeMatchIndex = -1;
         });
       });
