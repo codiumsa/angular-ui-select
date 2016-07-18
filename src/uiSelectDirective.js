@@ -300,7 +300,6 @@ uis.directive('uiSelect',
 
         // Support changing the direction of the dropdown if there isn't enough space to render it.
         scope.$watch('$select.open', function() {
-
           if ($select.dropdownPosition === 'auto' || $select.dropdownPosition === 'up'){
             scope.calculateDropdownPos();
           }
