@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.18.1 - 2016-07-18T20:51:43.049Z
+ * Version: 0.18.1 - 2016-07-18T21:32:15.496Z
  * License: MIT
  */
 
@@ -807,7 +807,6 @@ uis.controller('uiSelectCtrl',
           return true;
         };
 
-    ctrl.searchInput.css('width', '10px');
     $timeout(function() { //Give tags time to render correctly
       if (sizeWatch === null && !updateIfVisible(calculateContainerWidth())) {
         sizeWatch = $scope.$watch(function() {
