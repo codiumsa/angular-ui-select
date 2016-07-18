@@ -157,6 +157,7 @@ describe('ui-select tests', function() {
       if (attrs.title !== undefined) { attrsHtml += ' title="' + attrs.title + '"'; }
       if (attrs.appendToBody !== undefined) { attrsHtml += ' append-to-body="' + attrs.appendToBody + '"'; }
       if (attrs.allowClear !== undefined) { matchAttrsHtml += ' allow-clear="' + attrs.allowClear + '"';}
+      if (attrs.allowFreeText !== undefined) { attrsHtml += ' allow-free-text="' + attrs.allowFreeText + '"';}
       if (attrs.inputId !== undefined) { attrsHtml += ' input-id="' + attrs.inputId + '"'; }
       if (attrs.ngClass !== undefined) { attrsHtml += ' ng-class="' + attrs.ngClass + '"'; }
     }
@@ -629,6 +630,32 @@ describe('ui-select tests', function() {
 
     expect($(el).scope().$select.selected).toEqual("I don't exist");
   });
+
+  it('should allow free text editing if the attribute says so', function() {
+     var el = createUiSelect({allowFreeText: true});
+     clickMatch(el);
+
+     var searchInput = el.find('.ui-select-search');
+     setSearchText(el, 'someKindOfFreeTextForBlurEvent');
+     searchInput.blur();
+     expect($(el).scope().$select.selected).toEqual('someKindOfFreeTextForBlurEvent');
+
+     clickMatch(el);
+     setSearchText(el, 'someKindOfFreeTextForTabKeydown');
+     triggerKeydown(searchInput, Key.Tab);
+     expect($(el).scope().$select.selected).toEqual('someKindOfFreeTextForTabKeydown');
+   });
+
+  it('should not allow a non existing item on TAB keydown', function() {
+     var el = createUiSelect();
+     clickMatch(el);
+
+     var searchInput = el.find('.ui-select-search');
+     setSearchText(el, 'someKindOfFreeTextForBlurEvent');
+     triggerKeydown(searchInput, Key.Tab);
+
+     expect($(el).scope().$select.selected).not.toBeDefined();
+ });
 
   it('should format new items using the tagging function when the attribute is a function', function() {
     scope.taggingFunc = function (name) {
@@ -2564,7 +2591,7 @@ describe('ui-select tests', function() {
       expect(el.scope().$select.items[1]).toEqual(jasmine.objectContaining({name: 'Amalie', email: 'amalie@email.com'}));
     });
 
-    
+
     it('should have tolerance for undefined values', function () {
 
       scope.modelValue = undefined;
@@ -2600,7 +2627,7 @@ describe('ui-select tests', function() {
 
       expect($(el).scope().$select.selected).toEqual([]);
     });
-      
+
     it('should allow paste tag from clipboard', function() {
       scope.taggingFunc = function (name) {
         return {

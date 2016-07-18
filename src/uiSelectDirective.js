@@ -99,6 +99,10 @@ uis.directive('uiSelect',
           $select.disabled = attrs.disabled !== undefined ? attrs.disabled : false;
         });
 
+        attrs.$observe('allowFreeText', function(allowFreeText) {
+          $select.allowFreeText = (angular.isDefined(allowFreeText)) ? (allowFreeText === '') ? true : (allowFreeText.toLowerCase() === 'true') : false;
+        });
+
         attrs.$observe('resetSearchInput', function() {
           // $eval() is needed otherwise we get a string instead of a boolean
           var resetSearchInput = scope.$eval(attrs.resetSearchInput);

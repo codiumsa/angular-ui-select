@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.18.1 - 2016-07-18T20:27:23.617Z
+ * Version: 0.18.1 - 2016-07-18T20:51:43.049Z
  * License: MIT
  */
 
@@ -105,6 +105,7 @@ var uis = angular.module('ui.select', [])
 .constant('uiSelectConfig', {
   theme: 'bootstrap',
   searchEnabled: true,
+  allowFreeText: false,
   sortable: false,
   placeholder: '', // Empty by default, like HTML tag <select>
   refreshDelay: 1000, // In milliseconds
@@ -280,6 +281,7 @@ uis.controller('uiSelectCtrl',
   ctrl.placeholder = uiSelectConfig.placeholder;
   ctrl.searchEnabled = uiSelectConfig.searchEnabled;
   ctrl.sortable = uiSelectConfig.sortable;
+  ctrl.allowFreeText = uiSelectConfig.allowFreeText;
   ctrl.refreshDelay = uiSelectConfig.refreshDelay;
   ctrl.paste = uiSelectConfig.paste;
 
@@ -605,7 +607,7 @@ uis.controller('uiSelectCtrl',
   function _isItemDisabled(item) {
     return disabledItems.indexOf(item) > -1;
   }
-  
+
   ctrl.isDisabled = function(itemScope) {
 
     if (!ctrl.open) return;
@@ -613,7 +615,7 @@ uis.controller('uiSelectCtrl',
     var item = itemScope[ctrl.itemProperty];
     var itemIndex = ctrl.items.indexOf(item);
     var isDisabled = false;
-    
+
     if (itemIndex >= 0 && (angular.isDefined(ctrl.disableChoiceExpression) || ctrl.multiple)) {
 
       if (item.isTag) return false;
@@ -625,7 +627,7 @@ uis.controller('uiSelectCtrl',
       if (!isDisabled && angular.isDefined(ctrl.disableChoiceExpression)) {
         isDisabled = !!(itemScope.$eval(ctrl.disableChoiceExpression));
       }
-      
+
       _updateItemDisabled(item, isDisabled);
     }
 
@@ -737,7 +739,7 @@ uis.controller('uiSelectCtrl',
     }
   };
 
-  // Set default function for locked choices - avoids unnecessary 
+  // Set default function for locked choices - avoids unnecessary
   // logic if functionality is not being used
   ctrl.isLocked = function () {
     return false;
@@ -749,7 +751,7 @@ uis.controller('uiSelectCtrl',
 
   function _initaliseLockedChoices(doInitalise) {
     if(!doInitalise) return;
-    
+
     var lockedItems = [];
 
     function _updateItemLocked(item, isLocked) {
@@ -783,7 +785,7 @@ uis.controller('uiSelectCtrl',
       return isLocked;
     };
   }
-  
+
 
   var sizeWatch = null;
   var updaterScheduled = false;
@@ -823,6 +825,18 @@ uis.controller('uiSelectCtrl',
       }
     });
   };
+
+  function _handleBlurAndTab() {
+    if(ctrl.allowFreeText && ctrl.search) {
+      ctrl.select(ctrl.search);
+      ctrl.close();
+      ctrl.search = EMPTY_SEARCH;
+    }
+  }
+
+  ctrl.searchInput.on('blur', function() {
+      _handleBlurAndTab();
+  });
 
   function _handleDropDownSelection(key) {
     var processed = true;
@@ -894,6 +908,13 @@ uis.controller('uiSelectCtrl',
               if (newItem) ctrl.select(newItem, true);
             });
           }
+        }
+      } else if(~[KEY.ESC,KEY.TAB].indexOf(key)){
+        if(!ctrl.allowFreeText) {
+          ctrl.close();
+        }
+        else {
+          _handleBlurAndTab();
         }
       }
 
@@ -1098,6 +1119,10 @@ uis.directive('uiSelect',
         attrs.$observe('disabled', function() {
           // No need to use $eval() (thanks to ng-disabled) since we already get a boolean instead of a string
           $select.disabled = attrs.disabled !== undefined ? attrs.disabled : false;
+        });
+
+        attrs.$observe('allowFreeText', function(allowFreeText) {
+          $select.allowFreeText = (angular.isDefined(allowFreeText)) ? (allowFreeText === '') ? true : (allowFreeText.toLowerCase() === 'true') : false;
         });
 
         attrs.$observe('resetSearchInput', function() {

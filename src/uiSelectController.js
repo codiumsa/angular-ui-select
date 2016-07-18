@@ -15,6 +15,7 @@ uis.controller('uiSelectCtrl',
   ctrl.placeholder = uiSelectConfig.placeholder;
   ctrl.searchEnabled = uiSelectConfig.searchEnabled;
   ctrl.sortable = uiSelectConfig.sortable;
+  ctrl.allowFreeText = uiSelectConfig.allowFreeText;
   ctrl.refreshDelay = uiSelectConfig.refreshDelay;
   ctrl.paste = uiSelectConfig.paste;
 
@@ -340,7 +341,7 @@ uis.controller('uiSelectCtrl',
   function _isItemDisabled(item) {
     return disabledItems.indexOf(item) > -1;
   }
-  
+
   ctrl.isDisabled = function(itemScope) {
 
     if (!ctrl.open) return;
@@ -348,7 +349,7 @@ uis.controller('uiSelectCtrl',
     var item = itemScope[ctrl.itemProperty];
     var itemIndex = ctrl.items.indexOf(item);
     var isDisabled = false;
-    
+
     if (itemIndex >= 0 && (angular.isDefined(ctrl.disableChoiceExpression) || ctrl.multiple)) {
 
       if (item.isTag) return false;
@@ -360,7 +361,7 @@ uis.controller('uiSelectCtrl',
       if (!isDisabled && angular.isDefined(ctrl.disableChoiceExpression)) {
         isDisabled = !!(itemScope.$eval(ctrl.disableChoiceExpression));
       }
-      
+
       _updateItemDisabled(item, isDisabled);
     }
 
@@ -472,7 +473,7 @@ uis.controller('uiSelectCtrl',
     }
   };
 
-  // Set default function for locked choices - avoids unnecessary 
+  // Set default function for locked choices - avoids unnecessary
   // logic if functionality is not being used
   ctrl.isLocked = function () {
     return false;
@@ -484,7 +485,7 @@ uis.controller('uiSelectCtrl',
 
   function _initaliseLockedChoices(doInitalise) {
     if(!doInitalise) return;
-    
+
     var lockedItems = [];
 
     function _updateItemLocked(item, isLocked) {
@@ -518,7 +519,7 @@ uis.controller('uiSelectCtrl',
       return isLocked;
     };
   }
-  
+
 
   var sizeWatch = null;
   var updaterScheduled = false;
@@ -558,6 +559,18 @@ uis.controller('uiSelectCtrl',
       }
     });
   };
+
+  function _handleBlurAndTab() {
+    if(ctrl.allowFreeText && ctrl.search) {
+      ctrl.select(ctrl.search);
+      ctrl.close();
+      ctrl.search = EMPTY_SEARCH;
+    }
+  }
+
+  ctrl.searchInput.on('blur', function() {
+      _handleBlurAndTab();
+  });
 
   function _handleDropDownSelection(key) {
     var processed = true;
@@ -629,6 +642,13 @@ uis.controller('uiSelectCtrl',
               if (newItem) ctrl.select(newItem, true);
             });
           }
+        }
+      } else if(~[KEY.ESC,KEY.TAB].indexOf(key)){
+        if(!ctrl.allowFreeText) {
+          ctrl.close();
+        }
+        else {
+          _handleBlurAndTab();
         }
       }
 
