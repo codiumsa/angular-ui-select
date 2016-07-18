@@ -1,11 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
-<<<<<<< Updated upstream
- * Version: 0.18.1 - 2016-07-18T20:09:40.300Z
-=======
- * Version: 0.17.1 - 2016-05-17T16:37:16.426Z
->>>>>>> Stashed changes
+ * Version: 0.18.1 - 2016-07-18T20:27:23.617Z
  * License: MIT
  */
 
@@ -1305,7 +1301,6 @@ uis.directive('uiSelect',
 
         // Support changing the direction of the dropdown if there isn't enough space to render it.
         scope.$watch('$select.open', function() {
-          console.log("$select.open");
           if ($select.dropdownPosition === 'auto' || $select.dropdownPosition === 'up'){
             scope.calculateDropdownPos();
           }
@@ -1385,7 +1380,6 @@ uis.directive('uiSelect',
             if (!uisOffset(dropdown).height && $select.$animate && $select.$animate.on && $select.$animate.enabled(dropdown)) {
               var needsCalculated = true;
 
-<<<<<<< Updated upstream
               $select.$animate.on('enter', dropdown, function (elem, phase) {
                 if (phase === 'close' && needsCalculated) {
                   calculateDropdownPosAfterAnimation();
@@ -1395,16 +1389,6 @@ uis.directive('uiSelect',
             } else {
               calculateDropdownPosAfterAnimation();
             }
-=======
-              // Display the dropdown once it has been positioned.
-              dropdown[0].style.opacity = 1;
-              console.log("Se intentará dar foco.");
-              dropdown[0].focus(function() {
-                console.log("Se otorgo foco a dropdown.");
-              });
-              console.log(dropdown[0]);
-            });
->>>>>>> Stashed changes
           } else {
             if (dropdown === null || dropdown.length === 0) {
               return;
@@ -2034,19 +2018,16 @@ uis.directive('uiSelectSingle', ['$timeout','$compile', function($timeout, $comp
 
       element.parent().append(focusser);
       focusser.bind("focus", function(){
-        console.log("focus");
         scope.$evalAsync(function(){
           $select.focus = true;
         });
       });
       focusser.bind("blur", function(){
-        console.log("blur");
         scope.$evalAsync(function(){
           $select.focus = false;
         });
       });
       focusser.bind("keydown", function(e){
-        console.log("keydown");
         if (e.which === KEY.BACKSPACE) {
           e.preventDefault();
           e.stopPropagation();
