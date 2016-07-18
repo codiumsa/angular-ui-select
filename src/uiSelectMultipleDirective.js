@@ -26,8 +26,12 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
         //Remove already selected items
         //e.g. When user clicks on a selection, the selected array changes and
         //the dropdown should remove that item
-        $select.refreshItems();
-        $select.sizeSearchInput();
+        if($select.refreshItems){
+          $select.refreshItems();
+        }
+        if($select.sizeSearchInput){
+          $select.sizeSearchInput();
+        }
       };
 
       //sets selected match index as new activeMatchIndex and triggers callback
@@ -49,10 +53,10 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
       // Remove item from multiple select
       ctrl.removeChoice = function(index){
 
-        var removedChoice = $select.selected[index];
+        // if the choice is locked, don't remove it
+        if($select.isLocked(null, index)) return false;
 
-        // if the choice is locked, can't remove it
-        if(removedChoice._uiSelectChoiceLocked) return;
+        var removedChoice = $select.selected[index];
 
         var locals = {};
         locals[$select.parserResult.itemName] = removedChoice;
@@ -71,6 +75,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
 
         ctrl.updateModel();
 
+        return true;
       };
 
       ctrl.getPlaceholder = function(){
@@ -92,7 +97,6 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
       //$select.selected = raw selected objects (ignoring any property binding)
 
       $select.multiple = true;
-      $select.removeSelected = true;
 
       //Input that will handle focus
       $select.focusInput = $select.searchInput;
@@ -175,7 +179,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
         if(!angular.isArray(ngModel.$viewValue)){
           // Have tolerance for null or undefined values
           if(angular.isUndefined(ngModel.$viewValue) || ngModel.$viewValue === null){
-            $select.selected = [];
+            ngModel.$viewValue = [];
           } else {
             throw uiSelectMinErr('multiarr', "Expected model value to be array but got '{0}'", ngModel.$viewValue);
           }
@@ -259,11 +263,16 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
             case KEY.BACKSPACE:
               // Remove selected item and select previous/first
               if(~$selectMultiple.activeMatchIndex){
-                $selectMultiple.removeChoice(curr);
-                return prev;
-              }
-              // Select last item
-              else return last;
+                if($selectMultiple.removeChoice(curr)) {
+                  return prev;
+                } else {
+                  return curr;
+                }
+                
+              } else {
+                // If nothing yet selected, select last item
+                return last;  
+              }              
               break;
             case KEY.DELETE:
               // Remove selected item and select next item

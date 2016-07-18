@@ -18,7 +18,7 @@ uis.controller('uiSelectCtrl',
   ctrl.refreshDelay = uiSelectConfig.refreshDelay;
   ctrl.paste = uiSelectConfig.paste;
 
-  ctrl.removeSelected = false; //If selected item(s) should be removed from dropdown list
+  ctrl.removeSelected = uiSelectConfig.removeSelected; //If selected item(s) should be removed from dropdown list
   ctrl.closeOnSelect = true; //Initialized inside uiSelect directive link function
   ctrl.skipFocusser = false; //Set to true to avoid returning focus to ctrl when item is selected
   ctrl.search = EMPTY_SEARCH;
@@ -125,7 +125,7 @@ uis.controller('uiSelectCtrl',
 
       var container = $element.querySelectorAll('.ui-select-choices-content');
       var searchInput = $element.querySelectorAll('.ui-select-search');
-      if (ctrl.$animate && ctrl.$animate.enabled(container[0])) {
+      if (ctrl.$animate && ctrl.$animate.on && ctrl.$animate.enabled(container[0])) {
         var animateHandler = function(elem, phase) {
           if (phase === 'start' && ctrl.items.length === 0) {
             // Only focus input after the animation has finished
@@ -235,14 +235,14 @@ uis.controller('uiSelectCtrl',
       data = data || ctrl.parserResult.source($scope);
       var selectedItems = ctrl.selected;
       //TODO should implement for single mode removeSelected
-      if (ctrl.isEmpty() || (angular.isArray(selectedItems) && !selectedItems.length) || !ctrl.removeSelected) {
+      if (ctrl.isEmpty() || (angular.isArray(selectedItems) && !selectedItems.length) || !ctrl.multiple || !ctrl.removeSelected) {
         ctrl.setItemsFn(data);
       }else{
-        if ( data !== undefined ) {
+        if ( data !== undefined && data !== null ) {
           var filteredItems = data.filter(function(i) {
-            return selectedItems.every(function(selectedItem) {
+            return angular.isArray(selectedItems) ? selectedItems.every(function(selectedItem) {
               return !angular.equals(i, selectedItem);
-            });
+            }) : !angular.equals(i, selectedItems);
           });
           ctrl.setItemsFn(filteredItems);
         }
@@ -250,6 +250,8 @@ uis.controller('uiSelectCtrl',
       if (ctrl.dropdownPosition === 'auto' || ctrl.dropdownPosition === 'up'){
         $scope.calculateDropdownPos();
       }
+
+      $scope.$broadcast('uis:refresh');
     };
 
     // See https://github.com/angular/angular.js/blob/v1.2.15/src/ng/directive/ngRepeat.js#L259
@@ -317,18 +319,49 @@ uis.controller('uiSelectCtrl',
     return isActive;
   };
 
+  var _isItemSelected = function (item) {
+    return (ctrl.selected && angular.isArray(ctrl.selected) &&
+        ctrl.selected.filter(function (selection) { return angular.equals(selection, item); }).length > 0);
+  };
+
+  var disabledItems = [];
+
+  function _updateItemDisabled(item, isDisabled) {
+    var disabledItemIndex = disabledItems.indexOf(item);
+    if (isDisabled && disabledItemIndex === -1) {
+      disabledItems.push(item);
+    }
+
+    if (!isDisabled && disabledItemIndex > -1) {
+      disabledItems.splice(disabledItemIndex, 0);
+    }
+  }
+
+  function _isItemDisabled(item) {
+    return disabledItems.indexOf(item) > -1;
+  }
+  
   ctrl.isDisabled = function(itemScope) {
 
     if (!ctrl.open) return;
 
-    var itemIndex = ctrl.items.indexOf(itemScope[ctrl.itemProperty]);
+    var item = itemScope[ctrl.itemProperty];
+    var itemIndex = ctrl.items.indexOf(item);
     var isDisabled = false;
-    var item;
+    
+    if (itemIndex >= 0 && (angular.isDefined(ctrl.disableChoiceExpression) || ctrl.multiple)) {
 
-    if (itemIndex >= 0 && !angular.isUndefined(ctrl.disableChoiceExpression)) {
-      item = ctrl.items[itemIndex];
-      isDisabled = !!(itemScope.$eval(ctrl.disableChoiceExpression)); // force the boolean value
-      item._uiSelectChoiceDisabled = isDisabled; // store this for later reference
+      if (item.isTag) return false;
+
+      if (ctrl.multiple) {
+        isDisabled = _isItemSelected(item);
+      }
+
+      if (!isDisabled && angular.isDefined(ctrl.disableChoiceExpression)) {
+        isDisabled = !!(itemScope.$eval(ctrl.disableChoiceExpression));
+      }
+      
+      _updateItemDisabled(item, isDisabled);
     }
 
     return isDisabled;
@@ -337,16 +370,18 @@ uis.controller('uiSelectCtrl',
 
   // When the user selects an item with ENTER or clicks the dropdown
   ctrl.select = function(item, skipFocusser, $event) {
-    if (item === undefined || !item._uiSelectChoiceDisabled) {
+    if (item === undefined || !_isItemDisabled(item)) {
 
       if ( ! ctrl.items && ! ctrl.search && ! ctrl.tagging.isActivated) return;
 
-      if (!item || !item._uiSelectChoiceDisabled) {
+      if (!item || !_isItemDisabled(item)) {
         if(ctrl.tagging.isActivated) {
-          // if taggingLabel is disabled, we pull from ctrl.search val
+          // if taggingLabel is disabled and item is undefined we pull from ctrl.search
           if ( ctrl.taggingLabel === false ) {
             if ( ctrl.activeIndex < 0 ) {
-              item = ctrl.tagging.fct !== undefined ? ctrl.tagging.fct(ctrl.search) : ctrl.search;
+              if (item === undefined) {
+                item = ctrl.tagging.fct !== undefined ? ctrl.tagging.fct(ctrl.search) : ctrl.search;
+              }
               if (!item || angular.equals( ctrl.items[0], item ) ) {
                 return;
               }
@@ -375,7 +410,7 @@ uis.controller('uiSelectCtrl',
             }
           }
           // search ctrl.selected for dupes potentially caused by tagging and return early if found
-          if ( ctrl.selected && angular.isArray(ctrl.selected) && ctrl.selected.filter( function (selection) { return angular.equals(selection, item); }).length > 0 ) {
+          if (_isItemSelected(item)) {
             ctrl.close(skipFocusser);
             return;
           }
@@ -437,16 +472,53 @@ uis.controller('uiSelectCtrl',
     }
   };
 
-  ctrl.isLocked = function(itemScope, itemIndex) {
-      var isLocked, item = ctrl.selected[itemIndex];
+  // Set default function for locked choices - avoids unnecessary 
+  // logic if functionality is not being used
+  ctrl.isLocked = function () {
+    return false;
+  };
 
-      if (item && !angular.isUndefined(ctrl.lockChoiceExpression)) {
-          isLocked = !!(itemScope.$eval(ctrl.lockChoiceExpression)); // force the boolean value
-          item._uiSelectChoiceLocked = isLocked; // store this for later reference
+  $scope.$watch(function () {
+    return angular.isDefined(ctrl.lockChoiceExpression) && ctrl.lockChoiceExpression !== "";
+  }, _initaliseLockedChoices);
+
+  function _initaliseLockedChoices(doInitalise) {
+    if(!doInitalise) return;
+    
+    var lockedItems = [];
+
+    function _updateItemLocked(item, isLocked) {
+      var lockedItemIndex = lockedItems.indexOf(item);
+      if (isLocked && lockedItemIndex === -1) {
+        lockedItems.push(item);
+        }
+
+      if (!isLocked && lockedItemIndex > -1) {
+        lockedItems.splice(lockedItemIndex, 0);
+      }
+    }
+
+    function _isItemlocked(item) {
+      return lockedItems.indexOf(item) > -1;
+    }
+
+    ctrl.isLocked = function (itemScope, itemIndex) {
+      var isLocked = false,
+          item = ctrl.selected[itemIndex];
+
+      if(item) {
+        if (itemScope) {
+          isLocked = !!(itemScope.$eval(ctrl.lockChoiceExpression));
+          _updateItemLocked(item, isLocked);
+        } else {
+          isLocked = _isItemlocked(item);
+        }
       }
 
       return isLocked;
-  };
+    };
+  }
+  
 
   var sizeWatch = null;
   var updaterScheduled = false;
@@ -471,7 +543,7 @@ uis.controller('uiSelectCtrl',
     ctrl.searchInput.css('width', '10px');
     $timeout(function() { //Give tags time to render correctly
       if (sizeWatch === null && !updateIfVisible(calculateContainerWidth())) {
-        sizeWatch = $scope.$watch(angular.noop, function() {
+        sizeWatch = $scope.$watch(function() {
           if (!updaterScheduled) {
             updaterScheduled = true;
             $scope.$$postDigest(function() {
@@ -482,7 +554,7 @@ uis.controller('uiSelectCtrl',
               }
             });
           }
-        });
+        }, angular.noop);
       }
     });
   };
@@ -599,18 +671,16 @@ uis.controller('uiSelectCtrl',
         if (items.length === 0) {
           items = [data];
         }
-        if (items.length > 0) {
         var oldsearch = ctrl.search;
-          angular.forEach(items, function (item) {
-            var newItem = ctrl.tagging.fct ? ctrl.tagging.fct(item) : item;
-            if (newItem) {
-              ctrl.select(newItem, true);
-            }
-          });
-          ctrl.search = oldsearch || EMPTY_SEARCH;
-          e.preventDefault();
-          e.stopPropagation();
-        }
+        angular.forEach(items, function (item) {
+          var newItem = ctrl.tagging.fct ? ctrl.tagging.fct(item) : item;
+          if (newItem) {
+            ctrl.select(newItem, true);
+          }
+        });
+        ctrl.search = oldsearch || EMPTY_SEARCH;
+        e.preventDefault();
+        e.stopPropagation();
       } else if (ctrl.paste) {
         ctrl.paste(data);
         ctrl.search = EMPTY_SEARCH;
