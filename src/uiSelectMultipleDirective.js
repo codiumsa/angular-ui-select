@@ -458,6 +458,7 @@ uis.directive('uiSelectMultiple', ['uiSelectMinErr','$timeout', function(uiSelec
 
       $select.searchInput.on('blur', function() {
         $timeout(function() {
+          $select.searchInput[0].value = "";
           $selectMultiple.activeMatchIndex = -1;
         });
       });

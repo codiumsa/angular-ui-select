@@ -15,6 +15,7 @@ uis.controller('uiSelectCtrl',
   ctrl.placeholder = uiSelectConfig.placeholder;
   ctrl.searchEnabled = uiSelectConfig.searchEnabled;
   ctrl.sortable = uiSelectConfig.sortable;
+  ctrl.allowFreeText = uiSelectConfig.allowFreeText;
   ctrl.refreshDelay = uiSelectConfig.refreshDelay;
   ctrl.paste = uiSelectConfig.paste;
   ctrl.resetSearchInput = uiSelectConfig.resetSearchInput;
@@ -552,7 +553,6 @@ uis.controller('uiSelectCtrl',
           return true;
         };
 
-    ctrl.searchInput.css('width', '10px');
     $timeout(function() { //Give tags time to render correctly
       if (sizeWatch === null && !updateIfVisible(calculateContainerWidth())) {
         sizeWatch = $scope.$watch(function() {
@@ -570,6 +570,18 @@ uis.controller('uiSelectCtrl',
       }
     });
   };
+
+  function _handleBlurAndTab() {
+    if(ctrl.allowFreeText && ctrl.search) {
+      ctrl.select(ctrl.search);
+      ctrl.close();
+      ctrl.search = EMPTY_SEARCH;
+    }
+  }
+
+  ctrl.searchInput.on('blur', function() {
+      _handleBlurAndTab();
+  });
 
   function _handleDropDownSelection(key) {
     var processed = true;
@@ -639,6 +651,13 @@ uis.controller('uiSelectCtrl',
               if (newItem) ctrl.select(newItem, true);
             });
           }
+        }
+      } else if(~[KEY.ESC,KEY.TAB].indexOf(key)){
+        if(!ctrl.allowFreeText) {
+          ctrl.close();
+        }
+        else {
+          _handleBlurAndTab();
         }
       }
 

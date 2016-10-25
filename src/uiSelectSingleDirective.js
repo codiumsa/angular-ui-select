@@ -84,7 +84,6 @@ uis.directive('uiSelectSingle', ['$timeout','$compile', function($timeout, $comp
         });
       });
       focusser.bind("keydown", function(e){
-
         if (e.which === KEY.BACKSPACE) {
           e.preventDefault();
           e.stopPropagation();
