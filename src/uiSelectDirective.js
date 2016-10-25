@@ -56,11 +56,10 @@ uis.directive('uiSelect',
             var skipFocusser = scope.$eval(attrs.skipFocusser);
             $select.skipFocusser = skipFocusser !== undefined ? skipFocusser : uiSelectConfig.skipFocusser;
         });
-
         $select.onSelectCallback = $parse(attrs.onSelect);
         $select.onMatchClickCallback = $parse(attrs.onMatchClick);
         $select.onRemoveCallback = $parse(attrs.onRemove);
-
+        $select.onWrongItemCallback = $parse(attrs.onWrongItem);
         //Set reference to ngModel from uiSelectCtrl
         $select.ngModel = ngModel;
 

@@ -95,6 +95,11 @@ uis.controller('uiSelectCtrl',
           return angular.equals(this, item);
         }, ctrl.selected);
       }
+      if(!ctrl.items.length) {
+        $timeout(function(){
+          ctrl.onWrongItemCallback($scope);
+        });
+      }
     }
   }
 
@@ -113,7 +118,7 @@ uis.controller('uiSelectCtrl',
   // When the user clicks on ui-select, displays the dropdown list
   ctrl.activate = function(initSearchValue, avoidReset) {
     if (!ctrl.disabled  && !ctrl.open) {
-      if(!avoidReset) _resetSearchInput();
+      //if(!avoidReset) _resetSearchInput();
 
       $scope.$broadcast('uis:activate');
 
