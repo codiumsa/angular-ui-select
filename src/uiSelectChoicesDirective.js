@@ -80,10 +80,6 @@ uis.directive('uiSelectChoices', ['uiSelectConfig', 'uisRepeatParser', 'uiSelect
             $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiSelectConfig.refreshDelay;
           });
 
-          attrs.$observe('lazyLoading', function() {
-            $select.lazyLoading = lazyLoading;
-          });
-
           scope.$watch('$select.open', function(open) {
             if (open) {
               tElement.attr('role', 'listbox');

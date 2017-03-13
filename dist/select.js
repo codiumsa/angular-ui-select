@@ -1,7 +1,7 @@
 /*!
  * angular-ui-select
  * http://github.com/codiumsa/angular-ui-select
- * Version: 0.21.0 - 2017-03-13T01:34:48.240Z
+ * Version: 0.21.0 - 2017-03-13T01:49:30.871Z
  * License: MIT
  */
 
@@ -260,10 +260,6 @@ uis.directive('uiSelectChoices', ['uiSelectConfig', 'uisRepeatParser', 'uiSelect
             // $eval() is needed otherwise we get a string instead of a number
             var refreshDelay = scope.$eval(attrs.refreshDelay);
             $select.refreshDelay = refreshDelay !== undefined ? refreshDelay : uiSelectConfig.refreshDelay;
-          });
-
-          attrs.$observe('lazyLoading', function() {
-            $select.lazyLoading = lazyLoading;
           });
 
           scope.$watch('$select.open', function(open) {
