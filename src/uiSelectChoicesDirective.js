@@ -96,7 +96,6 @@ uis.directive('uiSelectChoices', ['uiSelectConfig', 'uisRepeatParser', 'uiSelect
           attrs.$observe('lazyLoader', function() {
             var lazyLoader = $select.lazyLoader = scope.$eval(attrs.lazyLoader);
             $select.lazyLoading = lazyLoader && angular.isFunction(lazyLoader);
-            console.log('lazyLoading', $select.lazyLoading);
           });
 
           $select.doLazyLoading = function() {

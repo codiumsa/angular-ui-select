@@ -1,7 +1,7 @@
 /*!
  * angular-ui-select
  * http://github.com/codiumsa/angular-ui-select
- * Version: 0.20.0 - 2017-03-13T01:27:56.895Z
+ * Version: 0.21.0 - 2017-03-13T01:34:48.240Z
  * License: MIT
  */
 
@@ -278,7 +278,6 @@ uis.directive('uiSelectChoices', ['uiSelectConfig', 'uisRepeatParser', 'uiSelect
           attrs.$observe('lazyLoader', function() {
             var lazyLoader = $select.lazyLoader = scope.$eval(attrs.lazyLoader);
             $select.lazyLoading = lazyLoader && angular.isFunction(lazyLoader);
-            console.log('lazyLoading', $select.lazyLoading);
           });
 
           $select.doLazyLoading = function() {
